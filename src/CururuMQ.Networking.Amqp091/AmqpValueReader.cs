@@ -6,18 +6,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace CururuMQ.Networking.Amqp091
 {
     public class AmqpValueReader : IDisposable
     {
-        private static readonly Encoding UTF8 = Encoding.UTF8;
-        private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-        private static readonly IIntegerBitConverter IntegerConverter = EndiannessBitConverter.BigEndian.IntegerConverter;
-        private static readonly IFloatBitConverter FloatConverter = EndiannessBitConverter.BigEndian.FloatConverter;
-
         private byte[] stringBuffer = null;
         
         public AmqpValueReader(Stream input, bool leaveOpen)
@@ -25,7 +18,7 @@ namespace CururuMQ.Networking.Amqp091
             if (input == null)
                 throw new ArgumentNullException(nameof(input));
 
-            BaseReader = new BinaryReader(input, UTF8, leaveOpen);
+            BaseReader = new BinaryReader(input, AmqpDefinitions.UTF8, leaveOpen);
         }
         
         protected BinaryReader BaseReader { get; }
@@ -72,22 +65,22 @@ namespace CururuMQ.Networking.Amqp091
         }
 
         public virtual double ReadDouble()
-            => FloatConverter.ToDouble(BaseReader.ReadBytes(8));
+            => AmqpDefinitions.FloatConverter.ToDouble(BaseReader.ReadBytes(8));
 
         public virtual short ReadInt16()
-            => IntegerConverter.ToInt16(BaseReader.ReadBytes(2));
+            => AmqpDefinitions.IntegerConverter.ToInt16(BaseReader.ReadBytes(2));
 
         public virtual int ReadInt32()
-            => IntegerConverter.ToInt32(BaseReader.ReadBytes(4));
+            => AmqpDefinitions.IntegerConverter.ToInt32(BaseReader.ReadBytes(4));
 
         public virtual long ReadInt64()
-            => IntegerConverter.ToInt64(BaseReader.ReadBytes(8));
+            => AmqpDefinitions.IntegerConverter.ToInt64(BaseReader.ReadBytes(8));
 
         public virtual sbyte ReadSByte()
             => BaseReader.ReadSByte();
 
         public virtual float ReadSingle()
-            => FloatConverter.ToSingle(BaseReader.ReadBytes(4));
+            => AmqpDefinitions.FloatConverter.ToSingle(BaseReader.ReadBytes(4));
 
         public virtual string ReadString()
         {
@@ -112,7 +105,7 @@ namespace CururuMQ.Networking.Amqp091
                 }
             }
             
-            return UTF8.GetString(stringBuffer, 0, dataLength);
+            return AmqpDefinitions.UTF8.GetString(stringBuffer, 0, dataLength);
         }
 
         public virtual IReadOnlyDictionary<string, object> ReadTable()
@@ -130,17 +123,17 @@ namespace CururuMQ.Networking.Amqp091
         public virtual DateTime ReadTime()
         {
             var posixTimestamp = ReadUInt64();
-            return UnixEpoch.AddSeconds(posixTimestamp);
+            return AmqpDefinitions.UnixEpoch.AddSeconds(posixTimestamp);
         }
 
         public virtual ushort ReadUInt16()
-            => IntegerConverter.ToUInt16(BaseReader.ReadBytes(2));
+            => AmqpDefinitions.IntegerConverter.ToUInt16(BaseReader.ReadBytes(2));
 
         public virtual uint ReadUInt32()
-            => IntegerConverter.ToUInt32(BaseReader.ReadBytes(4));
+            => AmqpDefinitions.IntegerConverter.ToUInt32(BaseReader.ReadBytes(4));
 
         public virtual ulong ReadUInt64()
-            => IntegerConverter.ToUInt64(BaseReader.ReadBytes(8));
+            => AmqpDefinitions.IntegerConverter.ToUInt64(BaseReader.ReadBytes(8));
 
         public virtual object ReadFieldValue()
         {
