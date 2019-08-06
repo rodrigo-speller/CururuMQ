@@ -201,80 +201,180 @@ namespace CururuMQ.Networking.Amqp091
         public virtual void WriteUInt64(ulong value)
             => SealedWriteUInt64(value);
 
+        public virtual void WriteFieldValue(bool value)
+        {
+            BaseWriter.Write((byte)'t');
+            WriteBoolean(value);
+        }
+
+        public virtual void WriteFieldValue(sbyte value)
+        {
+            BaseWriter.Write((byte)'b');
+            WriteSByte(value);
+        }
+
+        public virtual void WriteFieldValue(byte value)
+        {
+            BaseWriter.Write((byte)'B');
+            WriteByte(value);
+        }
+
+        public virtual void WriteFieldValue(short value)
+        {
+            BaseWriter.Write((byte)'U');
+            WriteInt16(value);
+        }
+
+        public virtual void WriteFieldValue(ushort value)
+        {
+            BaseWriter.Write((byte)'u');
+            WriteUInt16(value);
+        }
+
+        public virtual void WriteFieldValue(int value)
+        {
+            BaseWriter.Write((byte)'I');
+            WriteInt32(value);
+        }
+
+        public virtual void WriteFieldValue(uint value)
+        {
+            BaseWriter.Write((byte)'i');
+            WriteUInt32(value);
+        }
+
+        public virtual void WriteFieldValue(long value)
+        {
+            BaseWriter.Write((byte)'L');
+            WriteInt64(value);
+        }
+
+        public virtual void WriteFieldValue(ulong value)
+        {
+            BaseWriter.Write((byte)'l');
+            WriteUInt64(value);
+        }
+
+        public virtual void WriteFieldValue(float value)
+        {
+            BaseWriter.Write((byte)'f');
+            WriteSingle(value);
+        }
+
+        public virtual void WriteFieldValue(double value)
+        {
+            BaseWriter.Write((byte)'d');
+            WriteDouble(value);
+        }
+
+        public virtual void WriteFieldValue(decimal value)
+        {
+            BaseWriter.Write((byte)'D');
+            WriteDecimal(value);
+        }
+
+        public virtual void WriteFieldValue(string value)
+        {
+            BaseWriter.Write((byte)'s');
+            WriteString(value);
+        }
+
+        public virtual void WriteFieldValue(byte[] value)
+        {
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+
+            BaseWriter.Write((byte)'S');
+            WriteBytes(value);
+        }
+
+        public virtual void WriteFieldValue(DateTime value)
+        {
+            if (value.ToUniversalTime() < AmqpDefinitions.UnixEpoch)
+                throw new ArgumentException($"The time value '{value}' is out of AMQP bounds.", nameof(value));
+
+            BaseWriter.Write((byte)'T');
+            WriteTime(value);
+        }
+
+        public virtual void WriteFieldValue(IEnumerable<KeyValuePair<string, object>> value)
+        {
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+
+            BaseWriter.Write((byte)'F');
+            WriteTable(value);
+        }
+
+        public virtual void WriteFieldValue(IEnumerable value)
+        {
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+
+            BaseWriter.Write((byte)'A');
+            WriteArray(value);
+        }
+
+        public virtual void WriteNullField()
+            => BaseWriter.Write((byte)'V');
+
         public virtual void WriteFieldValue(object value)
         {
             switch (value)
             {
                 case bool typedValue: // boolean: 0 = FALSE, else TRUE
-                    BaseWriter.Write((byte)'t');
-                    WriteBoolean(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case sbyte typedValue: // short-short-int
-                    BaseWriter.Write((byte)'b');
-                    WriteSByte(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case byte typedValue: // short-short-uint
-                    BaseWriter.Write((byte)'B');
-                    WriteByte(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case short typedValue: // short-int
-                    BaseWriter.Write((byte)'U');
-                    WriteInt16(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case ushort typedValue: // short-uint
-                    BaseWriter.Write((byte)'u');
-                    WriteUInt16(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case int typedValue: // long-int
-                    BaseWriter.Write((byte)'I');
-                    WriteInt32(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case uint typedValue: // long-uint
-                    BaseWriter.Write((byte)'i');
-                    WriteUInt32(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case long typedValue: // long-long-int
-                    BaseWriter.Write((byte)'L');
-                    WriteInt64(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case ulong typedValue: // long-long-uint
-                    BaseWriter.Write((byte)'l');
-                    WriteUInt64(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case float typedValue: //float: IEEE-754 
-                    BaseWriter.Write((byte)'f');
-                    WriteSingle(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case double typedValue: // double: rfc1832 XDR double
-                    BaseWriter.Write((byte)'d');
-                    WriteDouble(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case decimal typedValue: // decimal-value: scale long-int
-                    BaseWriter.Write((byte)'D');
-                    WriteDecimal(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case string typedValue: // short-string: OCTET *string-char: length + content
-                    BaseWriter.Write((byte)'s');
-                    WriteString(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case byte[] typedValue: // long-string: long-uint *OCTET: length + content
-                    BaseWriter.Write((byte)'S');
-                    WriteBytes(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case DateTime typedValue: // timestamp: long-long-uint: 64-bit POSIX 
-                    BaseWriter.Write((byte)'T');
-                    WriteTime(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case IEnumerable<KeyValuePair<string, object>> typedValue: // field-table: long-uint *(field-name field-value)
-                    BaseWriter.Write((byte)'F');
-                    WriteTable(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case IEnumerable typedValue: // field-array: long-int *field-value: array of values
-                    BaseWriter.Write((byte)'A');
-                    WriteArray(typedValue);
+                    WriteFieldValue(typedValue);
                     break;
                 case null: // no field
-                    BaseWriter.Write((byte)'V');
+                    WriteNullField();
                     break;
 
                 default:
