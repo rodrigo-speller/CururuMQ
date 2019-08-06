@@ -40,7 +40,10 @@ namespace CururuMQ.Networking.Amqp091
         }
         
         public void Dispose()
-            => BaseWriter.Dispose();
+        {
+            BaseWriter.Dispose();
+            buffer?.Dispose();
+        }
 
         protected void BufferedWrite(Action<AmqpValueWriter> action)
         {
