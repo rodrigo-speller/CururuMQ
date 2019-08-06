@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace CururuMQ.Networking.Amqp091
 {
@@ -26,9 +27,45 @@ namespace CururuMQ.Networking.Amqp091
         public void Dispose()
             => BaseReader.Dispose();
 
+        // USE SEALED READS TO REUSE BaseReader's OPERATIONS
+        // This avoids side effects by calling overridden methods
+        // by inherited readers.
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected double SealedReadDouble()
+            => AmqpDefinitions.FloatConverter.ToDouble(BaseReader.ReadBytes(8));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected short SealedReadInt16()
+            => AmqpDefinitions.IntegerConverter.ToInt16(BaseReader.ReadBytes(2));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected int SealedReadInt32()
+            => AmqpDefinitions.IntegerConverter.ToInt32(BaseReader.ReadBytes(4));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected long SealedReadInt64()
+            => AmqpDefinitions.IntegerConverter.ToInt64(BaseReader.ReadBytes(8));
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected float SealedReadSingle()
+            => AmqpDefinitions.FloatConverter.ToSingle(BaseReader.ReadBytes(4));
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected ushort SealedReadUInt16()
+            => AmqpDefinitions.IntegerConverter.ToUInt16(BaseReader.ReadBytes(2));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected uint SealedReadUInt32()
+            => AmqpDefinitions.IntegerConverter.ToUInt32(BaseReader.ReadBytes(4));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected ulong SealedReadUInt64()
+            => AmqpDefinitions.IntegerConverter.ToUInt64(BaseReader.ReadBytes(8));
+
         public virtual IEnumerable ReadArray()
         {
-            var length = ReadInt32();
+            var length = SealedReadInt32();
 
             if (length == 0)
                 return Array.Empty<object>();
@@ -46,7 +83,7 @@ namespace CururuMQ.Networking.Amqp091
 
         public virtual byte[] ReadBytes()
         {
-            var lengthData = ReadUInt32();
+            var lengthData = SealedReadUInt32();
 
             int length = checked((int)lengthData);
 
@@ -55,8 +92,8 @@ namespace CururuMQ.Networking.Amqp091
         
         public virtual decimal ReadDecimal()
         {
-            var scale = ReadByte();
-            var value = ReadInt32();
+            var scale = BaseReader.ReadByte();
+            var value = SealedReadInt32();
             var signal = value < 0;
 
             value = Math.Abs(value);
@@ -65,26 +102,26 @@ namespace CururuMQ.Networking.Amqp091
         }
 
         public virtual double ReadDouble()
-            => AmqpDefinitions.FloatConverter.ToDouble(BaseReader.ReadBytes(8));
+            => SealedReadDouble();
 
         public virtual short ReadInt16()
-            => AmqpDefinitions.IntegerConverter.ToInt16(BaseReader.ReadBytes(2));
+            => SealedReadInt16();
 
         public virtual int ReadInt32()
-            => AmqpDefinitions.IntegerConverter.ToInt32(BaseReader.ReadBytes(4));
+            => SealedReadInt32();
 
         public virtual long ReadInt64()
-            => AmqpDefinitions.IntegerConverter.ToInt64(BaseReader.ReadBytes(8));
+            => SealedReadInt64();
 
         public virtual sbyte ReadSByte()
             => BaseReader.ReadSByte();
 
         public virtual float ReadSingle()
-            => AmqpDefinitions.FloatConverter.ToSingle(BaseReader.ReadBytes(4));
+            => SealedReadSingle();
 
         public virtual string ReadString()
         {
-            var dataLength = ReadByte();
+            var dataLength = BaseReader.ReadByte();
 
             if (dataLength == 0)
                 return String.Empty;
@@ -100,7 +137,7 @@ namespace CururuMQ.Networking.Amqp091
                 if (bytesRead == 0)
                 {
                     // Hack: throw EOF
-                    stringBuffer[currentPos] = ReadByte();
+                    stringBuffer[currentPos] = BaseReader.ReadByte();
                     bytesRead = 1;
                 }
             }
@@ -110,7 +147,7 @@ namespace CururuMQ.Networking.Amqp091
 
         public virtual IReadOnlyDictionary<string, object> ReadTable()
         {
-            int length = checked((int)ReadUInt32());
+            int length = checked((int)SealedReadUInt32());
 
             if (length == 0)
                 return new Dictionary<string, object>();
@@ -122,22 +159,22 @@ namespace CururuMQ.Networking.Amqp091
 
         public virtual DateTime ReadTime()
         {
-            var posixTimestamp = ReadUInt64();
+            var posixTimestamp = SealedReadUInt64();
             return AmqpDefinitions.UnixEpoch.AddSeconds(posixTimestamp);
         }
 
         public virtual ushort ReadUInt16()
-            => AmqpDefinitions.IntegerConverter.ToUInt16(BaseReader.ReadBytes(2));
+            => SealedReadUInt16();
 
         public virtual uint ReadUInt32()
-            => AmqpDefinitions.IntegerConverter.ToUInt32(BaseReader.ReadBytes(4));
+            => SealedReadUInt32();
 
         public virtual ulong ReadUInt64()
-            => AmqpDefinitions.IntegerConverter.ToUInt64(BaseReader.ReadBytes(8));
+            => SealedReadUInt64();
 
         public virtual object ReadFieldValue()
         {
-            var signature = ReadByte();
+            var signature = BaseReader.ReadByte();
             
             switch ((char)signature)
             {

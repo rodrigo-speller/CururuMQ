@@ -30,7 +30,7 @@ namespace CururuMQ.Networking.Amqp091
         
         public override IEnumerable ReadArray()
         {
-            var length = ReadInt32();
+            var length = SealedReadInt32();
             
             if (length == 0)
                 return Array.Empty<object>();
@@ -46,7 +46,7 @@ namespace CururuMQ.Networking.Amqp091
 
         public override IReadOnlyDictionary<string, object> ReadTable()
         {
-            var length = checked((int)ReadUInt32());
+            var length = checked((int)SealedReadUInt32());
 
             if (length == 0)
                 return new Dictionary<string, object>();
